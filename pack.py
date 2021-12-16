@@ -33,9 +33,11 @@ def compress_to_size(data, size):
 		if remainder % 5 == 0:
 			break
 	else:
-		raise Exception("unable to compress to exact size")
-	
-	assert(remainder > 0)
+		#raise Exception("unable to compress to exact size")
+		return False
+
+	if remainder < 0:
+		return False
 	attempt += verbatim(b"") * (remainder // 5)
 	assert(len(attempt)) == size
 	assert(decompress_headerless(attempt) == data)
@@ -74,11 +76,10 @@ def write_png_chunk(stream, name, body):
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
-def main():
-	c = zlib.compressobj(level=9, wbits=-15)
-	appleimg = Image.open("../parallel-png-proposal/sprites/apple2.png").convert("RGB")
+def main(applepath, worldpath, outpath):
+	appleimg = Image.open(applepath).convert("RGB")
 	width, height = appleimg.size
-	worldimg = Image.open("../parallel-png-proposal/sprites/world2.png").convert("RGB")
+	worldimg = Image.open(worldpath).convert("RGB")
 	width2, height2 = worldimg.size
 
 	if width != width2 or height != height2:
@@ -93,23 +94,42 @@ def main():
 	a += verbatim(bytes(TARGET_SIZE))[:5]
 
 	b = b""
-	b += compress_to_size(MSG1, TARGET_SIZE-5)
-	b += verbatim(bytes(TARGET_SIZE))[:5]
-	b += compress_to_size(MSG2, TARGET_SIZE-5)
-	b += verbatim(bytes(TARGET_SIZE))[:5]
 
-	b += compress_to_size(MSG1, TARGET_SIZE-5)
-	b += verbatim(bytes(TARGET_SIZE))[:5]
-	b += compress_to_size(MSG2, TARGET_SIZE)
+	ypos = 0
+
+	while ypos < height:
+		for pieceheight in range(2, height-ypos): # TODO: binary search
+			start = TARGET_SIZE*ypos
+			end = TARGET_SIZE*(ypos+pieceheight)
+			acomp = compress_to_size(MSG1[start:end], TARGET_SIZE-5)
+			if not acomp:
+				break
+			bcomp = compress_to_size(MSG2[start:end], TARGET_SIZE-5)
+			if not bcomp:
+				break
+		else:
+			pieceheight += 1
+		pieceheight -= 1
+
+		start = TARGET_SIZE*ypos
+		end = TARGET_SIZE*(ypos+pieceheight)
+		acomp = compress_to_size(MSG1[start:end], TARGET_SIZE-5)
+		bcomp = compress_to_size(MSG2[start:end], TARGET_SIZE-5)
+
+		b += acomp
+		b += verbatim(bytes(TARGET_SIZE))[:5]
+		b += bcomp
+		b += verbatim(bytes(TARGET_SIZE))[:5]
+
+		ypos += pieceheight + 1
+
+	# re-sync the zlib streams
+	b = b[:-5]
+	b += verbatim(b"")
 	b += verbatim(b"", last=True)
-
-	decomp_len = len(decompress_headerless(b))
-	print("decompressed len", decomp_len)
 
 	interp_1 = decompress_headerless(a) + decompress_headerless(b)
 	interp_2 = decompress_headerless(a + b)
-
-	print(len(interp_1), len(interp_2))
 
 	check_filter_bytes(interp_1, width)
 	check_filter_bytes(interp_2, width)
@@ -117,10 +137,8 @@ def main():
 	a = b"\x78\xda" + a
 	b = b + adler32(interp_2).to_bytes(4, "big")
 
-
-	#width = (TARGET_SIZE-1)
-	height = 8*2#7*2+1
-	outfile = open("out.png", "wb")
+	height = ypos
+	outfile = open(outpath, "wb")
 
 	outfile.write(PNG_MAGIC)
 
@@ -142,12 +160,11 @@ def main():
 
 	n = 2
 	idot_size = 24 + 8 * n
-	piece_height = 0
 
 	idot = b""
 	idot += n.to_bytes(4, "big") # height divisor
 	idot += (0).to_bytes(4, "big") # unknown
-	idot += piece_height.to_bytes(4, "big") # divided height
+	idot += (0).to_bytes(4, "big") # divided height
 	idot += (idot_size).to_bytes(4, "big") # unknown
 	idot += (0).to_bytes(4, "big") # first height
 	idot += (height).to_bytes(4, "big") # second height
@@ -162,4 +179,7 @@ def main():
 	outfile.close()
 
 if __name__ == "__main__":
-	main()
+	if len(sys.argv) != 4:
+		print(f"USAGE: {sys.argv[0]} apple_input.png other_input.png output.png")
+		exit()
+	main(*sys.argv[1:4])
