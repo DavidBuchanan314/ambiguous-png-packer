@@ -15,3 +15,5 @@ As a bonus, here's a race condition I found in desktop macOS Safari:
 ![race condition](/samples/race_condition.png)
 
 You should see a slightly different image on each page refresh!
+
+Here's a "live" version, which self-refreshes on each frame: https://www.da.vidbuchanan.co.uk/widgets/pngdiff/race.html
