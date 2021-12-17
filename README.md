@@ -8,7 +8,7 @@ For context: https://www.da.vidbuchanan.co.uk/widgets/pngdiff/
 
 ![sample image](/samples/mac_vs_ibm_output.png)
 
-If you're viewing this via Apple software (e.g. Safari) you should see an image of a mac, and on other non-Apple software, you should see an IBM PC.
+If you're viewing this via Apple software (e.g. Safari) you should see an image of a mac, and on other non-Apple software, you should see an IBM PC. (Note: If you're in Safari and still seeing the IBM PC, hit refresh a few times...)
 
 As a bonus, here's a race condition I found in desktop macOS Safari:
 
