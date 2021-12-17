@@ -91,7 +91,8 @@ def main(applepath, worldpath, outpath):
 	MSG2 = apply_filter(worldimg)
 
 	a = b""
-	a += verbatim(bytes(TARGET_SIZE))[:5]
+	a += verbatim(bytes(TARGET_SIZE)) # row of empty pixels
+	a += verbatim(bytes(TARGET_SIZE))[:5] # start the zlib desync
 
 	b = b""
 
@@ -137,7 +138,7 @@ def main(applepath, worldpath, outpath):
 	a = b"\x78\xda" + a
 	b = b + adler32(interp_2).to_bytes(4, "big")
 
-	height = ypos
+	height = ypos + 1
 	outfile = open(outpath, "wb")
 
 	outfile.write(PNG_MAGIC)
@@ -164,10 +165,10 @@ def main(applepath, worldpath, outpath):
 	idot = b""
 	idot += n.to_bytes(4, "big") # height divisor
 	idot += (0).to_bytes(4, "big") # unknown
-	idot += (0).to_bytes(4, "big") # divided height
+	idot += (1).to_bytes(4, "big") # divided height
 	idot += (idot_size).to_bytes(4, "big") # unknown
-	idot += (0).to_bytes(4, "big") # first height
-	idot += (height).to_bytes(4, "big") # second height
+	idot += (1).to_bytes(4, "big") # first height
+	idot += (height-1).to_bytes(4, "big") # second height
 	idot += (idot_size + first_offset).to_bytes(4, "big") # idat restart offset
 
 	write_png_chunk(outfile, b"iDOT", idot)
