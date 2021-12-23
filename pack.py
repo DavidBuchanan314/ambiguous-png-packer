@@ -33,7 +33,6 @@ def compress_to_size(data, size):
 		if remainder % 5 == 0:
 			break
 	else:
-		#raise Exception("unable to compress to exact size")
 		return False
 
 	if remainder < 0:
@@ -116,6 +115,9 @@ def main(applepath, worldpath, outpath):
 		end = TARGET_SIZE*(ypos+pieceheight)
 		acomp = compress_to_size(MSG1[start:end], TARGET_SIZE-5)
 		bcomp = compress_to_size(MSG2[start:end], TARGET_SIZE-5)
+		
+		if (acomp is False) or (bcomp is False):
+			raise Exception("unable to compress to exact size")
 
 		b += acomp
 		b += verbatim(bytes(TARGET_SIZE))[:5]
