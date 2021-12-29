@@ -38,7 +38,7 @@ def compress_to_size(data, size):
 	if remainder < 0:
 		return False
 	attempt += verbatim(b"") * (remainder // 5)
-	assert(len(attempt)) == size
+	assert(len(attempt) == size)
 	assert(decompress_headerless(attempt) == data)
 	return attempt
 
