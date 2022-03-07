@@ -4,6 +4,8 @@ Craft PNG files that appear completely different in Apple software
 
 For context: https://www.da.vidbuchanan.co.uk/widgets/pngdiff/
 
+# UPDATE: Apple seems to have patched this now, I'm not sure in which version exactly
+
 ## Sample output:
 
 ![sample image](/samples/mac_vs_ibm_output.png)
